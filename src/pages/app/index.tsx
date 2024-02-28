@@ -1,0 +1,47 @@
+import nextI18NextConfig from '@/../next-i18next.config';
+import { AppLayout } from '@/components/layouts';
+import { NextPageWithLayout } from '@/pages/_app';
+import { prisma, redis } from '@/server/modules';
+import { appRouter } from '@/server/routers/_app';
+import { createServerSideHelpers } from '@trpc/react-query/server';
+import { GetServerSidePropsContext } from 'next';
+import { getServerSession } from 'next-auth';
+import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import SuperJSON from 'superjson';
+import { authOptions } from '../api/auth/[...nextauth]';
+
+const Page: NextPageWithLayout = () => {
+  return <></>;
+};
+
+Page.getLayout = (page) => <AppLayout>{page}</AppLayout>;
+
+export const getServerSideProps = async (
+  context: GetServerSidePropsContext,
+) => {
+  const session = await getServerSession(context.req, context.res, authOptions);
+  const helpers = createServerSideHelpers({
+    router: appRouter,
+    ctx: {
+      session,
+      redis,
+      prisma,
+    },
+    transformer: SuperJSON,
+  });
+
+  await helpers.publicAppMeta.get.prefetch();
+
+  return {
+    props: {
+      ...(await serverSideTranslations(
+        context.locale ?? 'zh',
+        undefined,
+        nextI18NextConfig,
+      )),
+      trpcState: helpers.dehydrate(),
+    },
+  };
+};
+
+export default Page;
