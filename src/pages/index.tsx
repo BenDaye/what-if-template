@@ -1,25 +1,24 @@
-import nextI18NextConfig from '@/../next-i18next.config';
 import { NextPageWithLayout } from '@/pages/_app';
-import { Typography } from '@mui/material';
-import { GetServerSidePropsContext } from 'next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import { Box, Link, Typography } from '@mui/material';
 
 const Page: NextPageWithLayout = () => {
-  return <Typography variant="h4">What If</Typography>;
-};
-
-export const getServerSideProps = async (
-  context: GetServerSidePropsContext,
-) => {
-  return {
-    props: {
-      ...(await serverSideTranslations(
-        context.locale ?? 'zh',
-        undefined,
-        nextI18NextConfig,
-      )),
-    },
-  };
+  return (
+    <Box>
+      <Typography
+        variant="h4"
+        paragraph
+      >{`You wouldn't see this page normally.`}</Typography>
+      <Typography variant="h4" paragraph>
+        {`The redirects function was not executed.`}
+      </Typography>
+      <Link
+        href="https://nextjs.org/docs/pages/api-reference/next-config-js/redirects"
+        target="_blank"
+      >
+        Check This
+      </Link>
+    </Box>
+  );
 };
 
 export default Page;

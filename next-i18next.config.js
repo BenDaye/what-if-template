@@ -12,4 +12,10 @@ module.exports = {
   ns: ['common', 'errorMessage', 'meta', 'auth'],
   preload: ['en', 'zh'],
   defaultNS: 'common',
+  react: {
+    // https://locize.com/blog/next-i18next/
+    // if all pages use the reloadResources mechanism, the bindI18n option can also be defined in next-i18next.config.js
+    bindI18n: 'languageChanged loaded',
+    useSuspense: false,
+  },
 };

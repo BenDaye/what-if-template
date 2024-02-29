@@ -31,11 +31,12 @@ import nextI18NextConfig from '../../next-i18next.config.js';
 // Client-side cache, shared for the whole session of the user in the browser.
 const clientSideEmotionCache = createEmotionCache();
 
-export type NextPageWithLayout<
-  TProps = Record<string, unknown>,
-  TInitialProps = TProps,
-> = NextPage<TProps, TInitialProps> & {
-  getLayout?: (page: ReactElement<TProps>) => ReactNode;
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type NextPageWithLayout<TProps = {}, TInitialProps = TProps> = NextPage<
+  TProps,
+  TInitialProps
+> & {
+  getLayout?: (page: ReactElement) => ReactNode;
 };
 
 export interface MyAppProps extends AppProps {
