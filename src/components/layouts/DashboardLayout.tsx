@@ -3,7 +3,7 @@ import { useTranslation } from 'next-i18next';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { PropsWithChildren, ReactElement, useMemo } from 'react';
-import { AppNavDrawer, AppProvider } from '../app';
+import { DashboardNavDrawer, DashboardProvider } from '../dashboard';
 import { HelloDrawer, WorldDrawer } from '../example';
 import { Main } from './Main';
 
@@ -15,7 +15,7 @@ type HeadMeta = {
 const navDrawerWidth = 48;
 const listDrawerWidth = 300;
 
-export const AppLayout = ({
+export const DashboardLayout = ({
   title,
   description,
   children,
@@ -23,11 +23,11 @@ export const AppLayout = ({
   const { t: tMeta } = useTranslation('meta');
   const router = useRouter();
   const openHelloListDrawer = useMemo(
-    () => router.pathname.startsWith('/app/hello'),
+    () => router.pathname.startsWith('/dashboard/hello'),
     [router.pathname],
   );
   const openWorldListDrawer = useMemo(
-    () => router.pathname.startsWith('/app/world'),
+    () => router.pathname.startsWith('/dashboard/world'),
     [router.pathname],
   );
   const openDrawer = useMemo(
@@ -44,16 +44,19 @@ export const AppLayout = ({
     [openDrawer],
   );
   return (
-    <AppProvider>
-      <Head key="app">
-        <title>{tMeta('App Title', title ?? 'App Title')}</title>
+    <DashboardProvider>
+      <Head key="dashboard">
+        <title>{tMeta('Dashboard Title', title ?? 'Dashboard Title')}</title>
         <meta
           name="description"
-          content={tMeta('App Description', description ?? 'App Description')}
+          content={tMeta(
+            'Dashboard Description',
+            description ?? 'Dashboard Description',
+          )}
         />
       </Head>
       <Box sx={{ height: 1, width: 1, overflow: 'hidden', display: 'flex' }}>
-        <AppNavDrawer
+        <DashboardNavDrawer
           variant="permanent"
           ModalProps={{ keepMounted: true }}
           sx={{
@@ -81,7 +84,6 @@ export const AppLayout = ({
           }}
           transitionDuration={0}
         />
-
         <WorldDrawer
           open={openWorldListDrawer}
           variant="persistent"
@@ -113,6 +115,6 @@ export const AppLayout = ({
           {children}
         </Main>
       </Box>
-    </AppProvider>
+    </DashboardProvider>
   );
 };

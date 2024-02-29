@@ -1,7 +1,7 @@
 import type { CreateNextContextOptions } from '@trpc/server/adapters/next';
 import type { CreateWSSContextFnOptions } from '@trpc/server/adapters/ws';
 import { getSession } from 'next-auth/react';
-import { prisma, redis } from './modules';
+import { prisma, redis, appLogger } from './modules';
 import { Session } from 'next-auth';
 
 export interface CreateContextOptions {
@@ -17,7 +17,9 @@ export const createContext = async (
 ) => {
   const session = await getSession(opts);
 
-  console.log('createContext for', session?.user?.username ?? 'unknown user');
+  appLogger
+    .child({}, { msgPrefix: '[TRPC] ' })
+    .debug(session, '🟢 Create Context');
 
   return {
     session,

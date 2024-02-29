@@ -1,14 +1,16 @@
 import { appLogger } from './pino';
 
+const _logger = appLogger.child({}, { msgPrefix: '[Task] ' });
+
 const startupTasks: PromiseLike<any>[] = [];
 
 export const launchStartupTasks = async () => {
   await Promise.all(startupTasks)
     .then(() => {
-      appLogger.info('✅ All startup tasks done');
+      _logger.info('✅ All startup tasks done');
     })
     .catch((err) => {
-      appLogger.error({ err }, '❌ Some startup tasks failed');
+      _logger.error({ err }, '❌ Some startup tasks failed');
     });
 };
 
@@ -17,9 +19,9 @@ const shutdownTasks: PromiseLike<any>[] = [];
 export const launchShutdownTasks = async () => {
   await Promise.all(shutdownTasks)
     .then(() => {
-      appLogger.info('✅ All shutdown tasks done');
+      _logger.info('✅ All shutdown tasks done');
     })
     .catch((err) => {
-      appLogger.error({ err }, '❌ Some shutdown tasks failed');
+      _logger.error({ err }, '❌ Some shutdown tasks failed');
     });
 };

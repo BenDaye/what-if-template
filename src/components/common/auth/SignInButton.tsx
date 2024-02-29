@@ -1,14 +1,14 @@
-import { useAppAuth } from '@/hooks';
+import { useAuth } from '@/hooks';
 import { Button, ButtonProps } from '@mui/material';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
 
-type SignUpButtonProps = ButtonProps;
+type SignInButtonProps = ButtonProps;
 
-export const SignUpButton = (props: SignUpButtonProps) => {
+export const SignInButton = (props: SignInButtonProps) => {
   const { status } = useSession();
   const { t: tAuth } = useTranslation('auth');
-  const { signUp } = useAppAuth();
+  const { signIn } = useAuth();
 
   return (
     <>
@@ -17,10 +17,10 @@ export const SignUpButton = (props: SignUpButtonProps) => {
         disabled={props?.disabled || status === 'authenticated'}
         onClick={(ev) => {
           props.onClick?.(ev);
-          signUp();
+          signIn();
         }}
       >
-        {tAuth('Sign Up._')}
+        {tAuth('SignIn._')}
       </Button>
     </>
   );

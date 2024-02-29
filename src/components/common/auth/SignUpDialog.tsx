@@ -1,8 +1,12 @@
-import { useNotice } from '@/hooks';
+import { AuthProps, useNotice } from '@/hooks';
 import { signUpSchema } from '@/server/schemas/auth';
 import { trpc } from '@/utils/trpc';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import {
+  Close as CloseIcon,
+  Visibility,
+  VisibilityOff,
+} from '@mui/icons-material';
 import { LoadingButton } from '@mui/lab';
 import {
   AppBar,
@@ -16,15 +20,16 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
+import { AuthRole } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
+import { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useBoolean } from 'usehooks-ts';
 import { z } from 'zod';
 import { SignInButton } from './SignInButton';
-import { Close as CloseIcon } from '@mui/icons-material';
 
-type SignUpDialogProps = DialogProps;
+type SignUpDialogProps = DialogProps & AuthProps;
 
 const signUpForm = signUpSchema
   .extend({
@@ -36,8 +41,13 @@ const signUpForm = signUpSchema
   });
 type SignUpForm = z.infer<typeof signUpForm>;
 
-export const SignUpDialog = (props: SignUpDialogProps) => {
-  const { showError, showSuccess } = useNotice();
+export const SignUpDialog = ({
+  role,
+  enableSignIn,
+  enableSignUp,
+  ...props
+}: SignUpDialogProps) => {
+  const { showError, showSuccess, showWarning } = useNotice();
   const { status } = useSession();
   const { t: tAuth } = useTranslation('auth');
   const { handleSubmit, control, reset } = useForm<SignUpForm>({
@@ -49,17 +59,30 @@ export const SignUpDialog = (props: SignUpDialogProps) => {
     resolver: zodResolver(signUpForm),
   });
   const { value: showPassword, toggle: toggleShowPassword } = useBoolean(false);
-  const { mutateAsync: signUp } = trpc.publicAppAuth.signUp.useMutation({
+  const { mutateAsync: signUpForUser } = trpc.publicAppAuth.signUp.useMutation({
     onError: (err) => showError(err.message),
     onSuccess: () => {
-      showSuccess(tAuth('Sign Up.Succeeded'));
+      showSuccess(tAuth('SignUp.Succeeded'));
       reset();
       props.onClose?.({}, 'backdropClick');
     },
   });
-  const onSubmit = async (data: SignUpForm) => {
-    await signUp(data).catch(() => null);
+
+  const signUpForAdmin = () => {
+    // TODO: Implement admin sign up
   };
+
+  const onSubmit = useCallback(
+    async (data: SignUpForm) => {
+      if (!enableSignUp) {
+        showWarning(tAuth('SignUp.Disabled'));
+        return;
+      }
+      if (role === AuthRole.USER) await signUpForUser(data).catch(() => null);
+      if (role === AuthRole.ADMIN) signUpForAdmin();
+    },
+    [enableSignUp, role, signUpForUser, showWarning, tAuth],
+  );
 
   return (
     <>
@@ -73,7 +96,7 @@ export const SignUpDialog = (props: SignUpDialogProps) => {
         <AppBar position="static" enableColorOnDark elevation={0}>
           <Toolbar variant="dense" sx={{ gap: 1 }}>
             <Typography variant="subtitle1" color="text.primary">
-              {tAuth('Sign Up._')}
+              {tAuth('SignUp._')}
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
             <IconButton
@@ -180,14 +203,16 @@ export const SignUpDialog = (props: SignUpDialogProps) => {
           />
         </DialogContent>
         <DialogActions>
-          <SignInButton color="info" onClick={() => reset()} />
+          {enableSignIn && (
+            <SignInButton color="info" onClick={() => reset()} />
+          )}
           <Box sx={{ flexGrow: 1 }}></Box>
           <LoadingButton
             loading={status === 'loading'}
             disabled={status === 'loading'}
             onClick={() => handleSubmit(onSubmit)()}
           >
-            {tAuth('Sign Up._')}
+            {tAuth('SignUp._')}
           </LoadingButton>
         </DialogActions>
       </Dialog>

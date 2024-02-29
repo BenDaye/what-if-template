@@ -1,33 +1,45 @@
-import { SignInDialog } from '@/components/app/auth/SignInDialog';
-import { SignUpDialog } from '@/components/app/auth/SignUpDialog';
+import { SignInDialog, SignUpDialog } from '@/components/common/auth';
 import { NOOP, NOOPAsync } from '@/utils/noop';
+import { AuthRole } from '@prisma/client';
 import { signOut as signOutNextAuth } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
 import { PropsWithChildren, createContext, useContext } from 'react';
 import { useBoolean } from 'usehooks-ts';
 import { useNotice } from '../notice';
 
-interface AppAuthProviderProps {
+export interface AuthProps {
+  role?: AuthRole;
+  enableSignIn?: boolean;
+  enableSignUp?: boolean;
+}
+
+interface AuthProviderProps {
   signIn: () => void;
   signUp: () => void;
   signOut: () => PromiseLike<void>;
 }
 
-const AppAuthProviderContext = createContext<AppAuthProviderProps>({
+const AuthProviderContext = createContext<AuthProviderProps>({
   signIn: NOOP,
   signUp: NOOP,
   signOut: NOOPAsync,
 });
 
-export const useAppAuth = () => useContext(AppAuthProviderContext);
+export const useAuth = () => useContext(AuthProviderContext);
 
-export const AppAuthProvider = ({ children }: PropsWithChildren) => {
+export const AuthProvider = ({
+  children,
+  role = AuthRole.USER,
+  enableSignIn = true,
+  enableSignUp = true,
+}: PropsWithChildren<AuthProps>) => {
   const { showError, showSuccess } = useNotice();
   const { t } = useTranslation('auth');
   const signOut = async () => {
     try {
       await signOutNextAuth({ redirect: false });
-      showSuccess(t('Sign Out.Succeeded'), {
+      showSuccess(t('SignOut.Succeeded'), {
+        autoHideDuration: 1000,
         onClose: () => {
           if (typeof window !== 'undefined') window.location.reload();
         },
@@ -60,7 +72,7 @@ export const AppAuthProvider = ({ children }: PropsWithChildren) => {
     openSignUpDialog();
   };
   return (
-    <AppAuthProviderContext.Provider
+    <AuthProviderContext.Provider
       value={{
         signIn,
         signUp,
@@ -74,6 +86,9 @@ export const AppAuthProvider = ({ children }: PropsWithChildren) => {
         fullWidth
         maxWidth="xs"
         disableEscapeKeyDown
+        role={role}
+        enableSignIn={enableSignIn}
+        enableSignUp={enableSignUp}
       />
       <SignUpDialog
         open={signUpDialog}
@@ -81,7 +96,10 @@ export const AppAuthProvider = ({ children }: PropsWithChildren) => {
         fullWidth
         maxWidth="xs"
         disableEscapeKeyDown
+        role={role}
+        enableSignIn={enableSignIn}
+        enableSignUp={enableSignUp}
       />
-    </AppAuthProviderContext.Provider>
+    </AuthProviderContext.Provider>
   );
 };

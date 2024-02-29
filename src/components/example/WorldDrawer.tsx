@@ -7,7 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 
-export const AppHelloDrawer = (props: DrawerProps) => {
+export const WorldDrawer = (props: DrawerProps) => {
   return (
     <Drawer {...props}>
       <AppBar color="inherit" position="static" elevation={1}>
@@ -16,7 +16,7 @@ export const AppHelloDrawer = (props: DrawerProps) => {
           variant="dense"
           disableGutters
         >
-          <Typography variant="subtitle2">Hello Drawer</Typography>
+          <Typography variant="subtitle2">World Drawer</Typography>
         </Toolbar>
       </AppBar>
 

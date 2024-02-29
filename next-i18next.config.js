@@ -9,6 +9,7 @@ module.exports = {
   reloadOnPrerender: process.env.NODE_ENV === 'development',
   saveMissing: process.env.NODE_ENV === 'development',
   nonExplicitSupportedLngs: true,
-  ns: ['common', 'errorMessage', 'meta'],
+  ns: ['common', 'errorMessage', 'meta', 'auth'],
+  preload: ['en', 'zh'],
   defaultNS: 'common',
 };

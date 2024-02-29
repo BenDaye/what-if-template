@@ -22,16 +22,16 @@ import { useTranslation } from 'next-i18next';
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
-type AppUserUpdateProfileDialogProps = DialogProps;
-export const AppUserUpdateProfileDialog = (
-  props: AppUserUpdateProfileDialogProps,
+type DashboardUserUpdateProfileDialogProps = DialogProps;
+export const DashboardUserUpdateProfileDialog = (
+  props: DashboardUserUpdateProfileDialogProps,
 ) => {
   const { showError, showSuccess } = useNotice();
   const { t: tCommon } = useTranslation('common');
   const { t: tAuth } = useTranslation('auth');
   const { data: session, status, update: updateSession } = useSession();
   const unauthenticated = useMemo(
-    () => status !== 'authenticated' || session.user?.role !== AuthRole.USER,
+    () => status !== 'authenticated' || session.user?.role !== AuthRole.ADMIN,
     [session, status],
   );
   const { handleSubmit, control, reset, setValue } =
@@ -46,7 +46,7 @@ export const AppUserUpdateProfileDialog = (
     if (session?.user?.email) setValue('email', session.user.email);
   }, [session, setValue]);
   const { mutateAsync: updateProfile } =
-    trpc.protectedAppUser.updateProfile.useMutation({
+    trpc.protectedDashboardUser.updateProfile.useMutation({
       onError: (err) => showError(err.message),
       onSuccess: ({ nickname, email }) => {
         showSuccess(tAuth('Profile.Updated'));

@@ -1,11 +1,11 @@
+import { IconButtonWithTooltip } from '@/components/common';
 import { Home as HelloIcon, Abc as WorldIcon } from '@mui/icons-material';
 import { Box, Drawer, DrawerProps } from '@mui/material';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
-import { IconButtonWithTooltip } from '../common';
-import { AppSettingsIconButton } from './settings/SettingsIconButton';
+import { DashboardSettingsIconButton } from './settings/SettingsIconButton';
 
-export const AppNavDrawer = (props: DrawerProps) => {
+export const DashboardNavDrawer = (props: DrawerProps) => {
   const router = useRouter();
   const { t: tCommon } = useTranslation('common');
   return (
@@ -41,14 +41,14 @@ export const AppNavDrawer = (props: DrawerProps) => {
         <IconButtonWithTooltip
           title={tCommon('Hello')}
           icon={<HelloIcon />}
-          onClick={() => router.push('/app/hello')}
-          active={router.pathname.startsWith('/app/hello')}
+          onClick={() => router.push('/dashboard/hello')}
+          active={router.pathname.startsWith('/dashboard/hello')}
         />
         <IconButtonWithTooltip
           title={tCommon('World')}
           icon={<WorldIcon />}
-          onClick={() => router.push('/app/world')}
-          active={router.pathname.startsWith('/app/world')}
+          onClick={() => router.push('/dashboard/world')}
+          active={router.pathname.startsWith('/dashboard/world')}
         />
       </Box>
       <Box
@@ -62,7 +62,7 @@ export const AppNavDrawer = (props: DrawerProps) => {
           py: 2,
         }}
       >
-        <AppSettingsIconButton />
+        <DashboardSettingsIconButton />
       </Box>
     </Drawer>
   );

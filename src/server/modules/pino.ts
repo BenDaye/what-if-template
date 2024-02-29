@@ -16,16 +16,16 @@ const pinoGlobal = global as typeof global & {
 export const appLogger: Logger =
   pinoGlobal?.appLogger ??
   pino(
-    { msgPrefix: '[App] ' },
+    { level: 'debug' },
     multistream([
-      { stream: pretty({ colorize: true, singleLine: true }), level: 'debug' },
+      { stream: pretty({ colorize: true, singleLine: false }), level: 'debug' },
       {
         stream: pretty({
           colorize: false,
           mkdir: true,
           destination: path.join(LOG_DIR, 'app.log'),
         }),
-        level: 'warn',
+        level: 'info',
       },
     ]),
   );

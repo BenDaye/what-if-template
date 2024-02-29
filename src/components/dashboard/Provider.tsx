@@ -1,10 +1,10 @@
-import { AppAuthProvider } from '@/hooks';
+import { AuthProvider } from '@/hooks';
 import { AuthRole } from '@prisma/client';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { PropsWithChildren, ReactElement, useEffect } from 'react';
 
-export const AppProvider = ({
+export const DashboardProvider = ({
   children,
 }: PropsWithChildren): ReactElement<PropsWithChildren> => {
   const router = useRouter();
@@ -13,12 +13,16 @@ export const AppProvider = ({
   // detect user role is match with route
   useEffect(() => {
     if (
-      session?.user?.role === AuthRole.ADMIN &&
-      !router.pathname.startsWith('/dashboard')
+      session?.user?.role === AuthRole.USER &&
+      !router.pathname.startsWith('/app')
     ) {
-      router.push('/dashboard');
+      router.push('/app');
     }
   }, [session, router]);
 
-  return <AppAuthProvider>{children}</AppAuthProvider>;
+  return (
+    <AuthProvider role={AuthRole.ADMIN} enableSignUp={false}>
+      {children}
+    </AuthProvider>
+  );
 };

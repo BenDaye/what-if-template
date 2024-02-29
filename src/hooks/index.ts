@@ -1,4 +1,5 @@
-export { AppAuthProvider, useAppAuth } from './auth';
+export { AuthProvider, useAuth } from './auth';
+export type { AuthProps } from './auth';
 export {
   useCopy,
   useCurrentRouteId,
@@ -7,8 +8,8 @@ export {
 } from './common';
 export {
   DarkModeProvider,
-  useDarkMode,
   TernaryDarkModeProvider,
+  useDarkMode,
 } from './darkMode';
 export { useHeadMeta } from './meta';
 export { NoticeProvider, useNotice } from './notice';

@@ -13,6 +13,8 @@ import { default as serveHandler } from 'serve-handler';
 import { default as http } from 'http';
 import path from 'path';
 
+const _logger = appLogger.child({}, { msgPrefix: '[Entry] ' });
+
 const serveHttp = http.createServer(async (request, response) =>
   serveHandler(request, response, {
     public: path.join(process.cwd(), '/uploads'),
@@ -21,53 +23,65 @@ const serveHttp = http.createServer(async (request, response) =>
 
 serveHttp
   .listen(process.env.SERVE_PORT ?? 3002)
-  .once('listening', () => appLogger.debug(`✅ Serve listening`))
-  .once('error', (err) => appLogger.debug(err));
+  .once('listening', () =>
+    _logger.debug(`✅ Serve listening on ${env.NEXT_PUBLIC_SERVE_URL}`),
+  )
+  .once('error', (err) => _logger.error({ err }, '❌ Serve error'));
 
 const wss = new ws.Server({ port: env.WS_PORT });
 const handler = applyWSSHandler({ wss, router: appRouter, createContext });
 
 wss.on('connection', (ws) => {
-  appLogger.debug(`🟢 Connection (${wss.clients.size})`);
+  _logger.debug(`🟢 WebSocket Connection (${wss.clients.size})`);
   ws.once('close', () => {
-    appLogger.debug(`🔴 Connection (${wss.clients.size})`);
+    _logger.debug(`🔴 WebSocket Connection (${wss.clients.size})`);
   });
 });
-appLogger.debug(`✅ WebSocket Server listening on ${env.NEXT_PUBLIC_WS_URL}`);
+_logger.debug(`✅ WebSocket Server listening on ${env.NEXT_PUBLIC_WS_URL}`);
 
-redis.once('ready', async () => {
-  appLogger.debug(redis.options, '✅ Redis Ready');
+redis
+  .once('ready', async () => {
+    _logger.debug(
+      `✅ Redis Ready on redis://${redis.options.username}:****@${redis.options.host}:${redis.options.port}`,
+    );
 
-  await launchStartupTasks();
-});
+    await launchStartupTasks();
+  })
+  .once('close', () => {
+    _logger.warn('🔴 Redis Close');
+  })
+  .on('error', (err) => {
+    _logger.error({ err }, '❌ Redis Error');
+  });
 
 const gracefulShutdown = async () => {
   await launchShutdownTasks().finally(() => {
     handler.broadcastReconnectNotification();
     wss.close();
+    serveHttp.close();
   });
 };
 
 process.once('SIGINT', async () => {
-  appLogger.warn('SIGINT');
+  _logger.warn('SIGINT');
   await gracefulShutdown();
   process.exit(0);
 });
 
 process.once('SIGTERM', async () => {
-  appLogger.warn('SIGTERM');
+  _logger.warn('SIGTERM');
   await gracefulShutdown();
   process.exit(0);
 });
 
 process.once('uncaughtException', async (err) => {
-  appLogger.error({ err }, '🤬 Got uncaught exception, process will exit');
+  _logger.error({ err }, '🤬 Got uncaught exception, process will exit');
   await gracefulShutdown();
   process.exit(1);
 });
 
 process.once('unhandledRejection', async (err) => {
-  appLogger.error({ err }, '🤬 Got unhandled rejection, process will exit');
+  _logger.error({ err }, '🤬 Got unhandled rejection, process will exit');
   await gracefulShutdown();
   process.exit(1);
 });

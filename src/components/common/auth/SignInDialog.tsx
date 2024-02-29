@@ -1,4 +1,4 @@
-import { useNotice } from '@/hooks';
+import { AuthProps, useNotice } from '@/hooks';
 import { SignInSchema, signInSchema } from '@/server/schemas/auth';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
@@ -19,16 +19,23 @@ import {
   Toolbar,
   Typography,
 } from '@mui/material';
+import { AuthRole } from '@prisma/client';
 import { signIn, useSession } from 'next-auth/react';
 import { useTranslation } from 'next-i18next';
+import { useCallback } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { useBoolean } from 'usehooks-ts';
 import { SignUpButton } from './SignUpButton';
 
-type SignInDialogProps = DialogProps;
+type SignInDialogProps = DialogProps & AuthProps;
 
-export const SignInDialog = (props: SignInDialogProps) => {
-  const { showError, showSuccess } = useNotice();
+export const SignInDialog = ({
+  role,
+  enableSignIn,
+  enableSignUp,
+  ...props
+}: SignInDialogProps) => {
+  const { showError, showSuccess, showWarning } = useNotice();
   const { status } = useSession();
   const { t: tAuth } = useTranslation('auth');
   const { handleSubmit, control, reset } = useForm<SignInSchema>({
@@ -39,29 +46,42 @@ export const SignInDialog = (props: SignInDialogProps) => {
     resolver: zodResolver(signInSchema),
   });
   const { value: showPassword, toggle: toggleShowPassword } = useBoolean(false);
-  const onSubmit = async (data: SignInSchema) => {
-    try {
-      const result = await signIn('credentials-user', {
-        ...data,
-        redirect: false,
-      });
-      if (result?.error) {
-        throw new Error(result.error);
+  const onSubmit = useCallback(
+    async (data: SignInSchema) => {
+      if (!enableSignIn) {
+        showWarning(tAuth('SignIn.Disabled'));
+        return;
       }
-      showSuccess(tAuth('Sign In.Succeeded'), {
-        onClose: () => {
-          if (typeof window !== 'undefined') window.location.reload();
-        },
-      });
-    } catch (error) {
-      if (error instanceof Error) {
-        showError(tAuth(error.message));
+      try {
+        const result =
+          role === AuthRole.USER
+            ? await signIn('credentials-user', {
+                ...data,
+                redirect: false,
+              })
+            : role === AuthRole.ADMIN
+              ? await signIn('credentials-admin', { ...data, redirect: false })
+              : { error: 'Unknown Auth Role' };
+        if (result?.error) {
+          throw new Error(result.error);
+        }
+        showSuccess(tAuth('SignIn.Succeeded'), {
+          autoHideDuration: 1000,
+          onClose: () => {
+            if (typeof window !== 'undefined') window.location.reload();
+          },
+        });
+      } catch (error) {
+        if (error instanceof Error) {
+          showError(tAuth(error.message));
+        }
+        console.error(error);
+      } finally {
+        reset();
       }
-      console.error(error);
-    } finally {
-      reset();
-    }
-  };
+    },
+    [reset, role, showError, showSuccess, showWarning, tAuth, enableSignIn],
+  );
 
   return (
     <>
@@ -75,7 +95,7 @@ export const SignInDialog = (props: SignInDialogProps) => {
         <AppBar position="static" enableColorOnDark elevation={0}>
           <Toolbar variant="dense" sx={{ gap: 1 }}>
             <Typography variant="subtitle1" color="text.primary">
-              {tAuth('Sign In._')}
+              {tAuth('SignIn._')}
             </Typography>
             <Box sx={{ flexGrow: 1 }} />
             <IconButton
@@ -147,14 +167,16 @@ export const SignInDialog = (props: SignInDialogProps) => {
           />
         </DialogContent>
         <DialogActions sx={{ gap: 1 }}>
-          <SignUpButton color="info" onClick={() => reset()} />
+          {enableSignUp && (
+            <SignUpButton color="info" onClick={() => reset()} />
+          )}
           <Box sx={{ flexGrow: 1 }}></Box>
           <LoadingButton
             loading={status === 'loading'}
             disabled={status === 'loading'}
             onClick={() => handleSubmit(onSubmit)()}
           >
-            {tAuth('Sign In._')}
+            {tAuth('SignIn._')}
           </LoadingButton>
         </DialogActions>
       </Dialog>

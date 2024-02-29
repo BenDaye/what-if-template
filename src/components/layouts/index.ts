@@ -1,2 +1,4 @@
-export { DefaultLayout } from './DefaultLayout';
-export { AppLayout } from './AppLayout';
+export * from './AppLayout';
+export * from './DashboardLayout';
+export * from './DefaultLayout';
+export * from './Main';
