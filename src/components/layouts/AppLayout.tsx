@@ -1,8 +1,10 @@
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { useTranslation } from 'next-i18next';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { PropsWithChildren, ReactElement, useMemo } from 'react';
+import { PropsWithChildren, ReactElement, useMemo, useState } from 'react';
+import { Rnd } from 'react-rnd';
+import { useDebounceCallback, useLocalStorage } from 'usehooks-ts';
 import { AppNavDrawer, AppProvider } from '../app';
 import { HelloDrawer, WorldDrawer } from '../example';
 import { Main } from './Main';
@@ -13,7 +15,6 @@ type HeadMeta = {
 };
 
 const navDrawerWidth = 48;
-const listDrawerWidth = 300;
 
 export const AppLayout = ({
   title,
@@ -34,15 +35,22 @@ export const AppLayout = ({
     () => openHelloListDrawer || openWorldListDrawer,
     [openHelloListDrawer, openWorldListDrawer],
   );
+  const [listDrawerWidth, setListDrawerWidth] = useLocalStorage<number>(
+    'app-layout-left-drawer-width',
+    300,
+  );
+  const handleListDrawerWidth = useDebounceCallback(setListDrawerWidth, 10);
   const mainLeft = useMemo(
     () => navDrawerWidth + 1 + (openDrawer ? listDrawerWidth + 1 : 0),
-    [openDrawer],
+    [listDrawerWidth, openDrawer],
   );
   const mainWidth = useMemo(
     () =>
       `calc(100% - ${navDrawerWidth + 1 + (openDrawer ? listDrawerWidth + 1 : 0)}px)`,
-    [openDrawer],
+    [listDrawerWidth, openDrawer],
   );
+  const theme = useTheme();
+  const [rndZIndex, setRndZIndex] = useState<number>(10);
   return (
     <AppProvider>
       <Head key="app">
@@ -52,7 +60,48 @@ export const AppLayout = ({
           content={tMeta('App Description', description ?? 'App Description')}
         />
       </Head>
-      <Box sx={{ height: 1, width: 1, overflow: 'hidden', display: 'flex' }}>
+      <Box
+        sx={{
+          height: '100vh',
+          width: '100vw',
+          overflow: 'hidden',
+          display: 'flex',
+        }}
+      >
+        <Rnd
+          style={{
+            zIndex: openDrawer ? rndZIndex : 0,
+            backgroundImage:
+              theme.palette.mode === 'dark'
+                ? `linear-gradient(rgba(255, 255, 255, 0.01), rgba(255, 255, 255, 0.05))`
+                : `linear-gradient(rgba(0, 0, 0, 0.01), rgba(0, 0, 0, 0.05))`,
+          }}
+          size={{
+            height: openDrawer ? '100vh' : 0,
+            width: openDrawer ? listDrawerWidth : 0,
+          }}
+          position={{ x: navDrawerWidth + 1, y: 0 }}
+          maxWidth={480}
+          minWidth={240}
+          disableDragging
+          enableResizing={{
+            top: false,
+            right: openDrawer,
+            bottom: false,
+            left: false,
+            topRight: false,
+            bottomRight: false,
+            bottomLeft: false,
+            topLeft: false,
+          }}
+          onResizeStart={() => setRndZIndex(theme.zIndex.drawer + 10)}
+          onResize={(e, direction, ref) => {
+            handleListDrawerWidth(ref.offsetWidth);
+          }}
+          onResizeStop={() => {
+            setRndZIndex(10);
+          }}
+        />
         <AppNavDrawer
           variant="permanent"
           ModalProps={{ keepMounted: true }}
