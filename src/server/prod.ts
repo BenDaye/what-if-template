@@ -1,5 +1,6 @@
 import { applyWSSHandler } from '@trpc/server/adapters/ws';
 import { createServer } from 'http';
+import type { Socket } from 'net';
 import next from 'next';
 import { parse } from 'url';
 import ws from 'ws';
@@ -20,7 +21,7 @@ const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
-  const server = createServer((req, res) => {
+  const server = createServer(async (req, res) => {
     const proto = req.headers['x-forwarded-proto'];
     if (proto && proto === 'http') {
       // redirect to ssl
@@ -32,30 +33,27 @@ app.prepare().then(() => {
     }
 
     const parsedUrl = parse(req.url!, true);
-    handle(req, res, parsedUrl);
+    await handle(req, res, parsedUrl);
   });
   const wss = new ws.Server({ server });
   const handler = applyWSSHandler({ wss, router: appRouter, createContext });
 
-  redis
-    .once('ready', async () => {
-      _logger.info(
-        `✅ Redis Ready on redis://${redis.options.username}:****@${redis.options.host}:${redis.options.port}`,
-      );
-
-      await launchStartupTasks();
-    })
-    .once('close', () => {
-      _logger.warn('🔴 Redis Close');
-    })
-    .on('error', (err) => {
-      _logger.error({ err }, '❌ Redis Error');
+  wss.on('connection', (ws) => {
+    _logger.debug(`WebSocket Connection (${wss.clients.size})`);
+    ws.once('close', () => {
+      _logger.debug(`WebSocket Connection (${wss.clients.size})`);
     });
+  });
+  _logger.debug(`WebSocket Server listening on ${env.NEXT_PUBLIC_WS_URL}`);
+
+  redis.once('ready', async () => {
+    await launchStartupTasks();
+  });
 
   const gracefulShutdown = async () => {
     await launchShutdownTasks().finally(() => {
       handler.broadcastReconnectNotification();
-      wss.close();
+      _logger.info('process exited');
     });
   };
 
@@ -72,26 +70,32 @@ app.prepare().then(() => {
   });
 
   process.once('uncaughtException', async (err) => {
-    _logger.error({ err }, '🤬 Got uncaught exception, process will exit');
+    _logger.error({ err }, 'Got uncaught exception, process will exit');
     await gracefulShutdown();
     process.exit(1);
   });
 
   process.once('unhandledRejection', async (err) => {
-    _logger.error({ err }, '🤬 Got unhandled rejection, process will exit');
+    _logger.error({ err }, 'Got unhandled rejection, process will exit');
     await gracefulShutdown();
     process.exit(1);
   });
 
   server.once('error', async (err) => {
-    _logger.error({ err }, '🤬 Got server error, process will exit');
+    _logger.error({ err }, 'Got server error, process will exit');
     await gracefulShutdown();
     process.exit(1);
   });
 
+  server.on('upgrade', (req, socket, head) => {
+    wss.handleUpgrade(req, socket as Socket, head, (ws) => {
+      wss.emit('connection', ws, req);
+    });
+  });
+
   server.listen(env.APP_PORT, () => {
     _logger.info(
-      `✅ Server listening on http://localhost:${env.APP_PORT} as ${env.NODE_ENV}`,
+      `Server listening on http://localhost:${env.APP_PORT} as ${env.NODE_ENV}`,
     );
   });
 });

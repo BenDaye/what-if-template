@@ -15,7 +15,7 @@ export const envSchema = z.object({
     .int()
     .nonnegative()
     .describe('The port for websocket to listen on'),
-  SERVE_PORT: z.coerce
+  SERVER_PORT: z.coerce
     .number()
     .int()
     .nonnegative()
@@ -41,7 +41,7 @@ export const envSchema = z.object({
     .string()
     .url()
     .describe('The url for websocket to listen on'),
-  NEXT_PUBLIC_SERVE_URL: z
+  NEXT_PUBLIC_SERVER_URL: z
     .string()
     .url()
     .describe('The url for serve to listen on'),

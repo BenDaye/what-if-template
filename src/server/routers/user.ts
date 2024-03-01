@@ -1,8 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { observable } from '@trpc/server/observable';
-import { CommonTRPCError, onError } from '../utils/errors';
 import { userEmitter } from '../modules';
-import { formatListArgs, formatListResponse } from '../utils/format';
 import { IdSchema, idSchema } from '../schemas/id';
 import {
   userListInputSchema,
@@ -14,6 +12,8 @@ import {
   publicProcedure,
   router,
 } from '../trpc';
+import { CommonTRPCError, onError } from '../utils/errors';
+import { formatListArgs, formatListResponse } from '../utils/format';
 
 const defaultAppInclude = Prisma.validator<Prisma.UserInclude>()({
   UserProfile: true,
@@ -80,7 +80,6 @@ export const protectedAppUser = router({
       async ({ ctx: { prisma, session }, input: { nickname, email } }) => {
         try {
           if (!session.user?.id) throw new CommonTRPCError('UNAUTHORIZED');
-          console.log(nickname, email);
           await prisma.user.update({
             where: { id: session.user?.id },
             data: {

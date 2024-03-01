@@ -1,8 +1,8 @@
 import type { CreateNextContextOptions } from '@trpc/server/adapters/next';
 import type { CreateWSSContextFnOptions } from '@trpc/server/adapters/ws';
-import { getSession } from 'next-auth/react';
-import { prisma, redis, appLogger } from './modules';
 import { Session } from 'next-auth';
+import { getSession } from 'next-auth/react';
+import { appLogger, prisma, redis } from './modules';
 
 export interface CreateContextOptions {
   session: Session | null;
@@ -19,7 +19,7 @@ export const createContext = async (
 
   appLogger
     .child({}, { msgPrefix: '[TRPC] ' })
-    .debug(session, '🟢 Create Context');
+    .debug(session, 'Create Context');
 
   return {
     session,
