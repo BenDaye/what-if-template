@@ -22,9 +22,9 @@ import { useTranslation } from 'next-i18next';
 import { useEffect, useMemo } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
-type DashboardUserUpdateProfileDialogProps = DialogProps;
-export const DashboardUserUpdateProfileDialog = (
-  props: DashboardUserUpdateProfileDialogProps,
+type DashboardAuthUpdateProfileDialogProps = DialogProps;
+export const DashboardAuthUpdateProfileDialog = (
+  props: DashboardAuthUpdateProfileDialogProps,
 ) => {
   const { showError, showSuccess } = useNotice();
   const { t: tCommon } = useTranslation('common');
@@ -54,6 +54,7 @@ export const DashboardUserUpdateProfileDialog = (
           name: nickname,
           email,
         });
+        props?.onClose?.({}, 'backdropClick');
       },
     });
   const onSubmit = async (data: UserUpdateProfileInputSchema) => {
@@ -136,7 +137,9 @@ export const DashboardUserUpdateProfileDialog = (
         <Button
           color="error"
           disabled={unauthenticated}
-          onClick={() => signOut()}
+          onClick={() =>
+            signOut().then(() => props.onClose?.({}, 'backdropClick'))
+          }
         >
           {tAuth('SignOut._')}
         </Button>

@@ -11,6 +11,8 @@
     "notistack",
     "overlayscrollbars",
     "pino",
+    "signin",
+    "signup",
     "superjson",
     "tanstack",
     "trpc",

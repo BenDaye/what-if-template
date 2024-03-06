@@ -1,3 +1,4 @@
+import { useHeadMeta } from '@/hooks';
 import { Box, useTheme } from '@mui/material';
 import { useTranslation } from 'next-i18next';
 import Head from 'next/head';
@@ -9,19 +10,13 @@ import { DashboardNavDrawer, DashboardProvider } from '../dashboard';
 import { HelloDrawer, WorldDrawer } from '../example';
 import { Main } from './Main';
 
-type HeadMeta = {
-  title?: string;
-  description?: string;
-};
-
 const navDrawerWidth = 48;
 
 export const DashboardLayout = ({
-  title,
-  description,
   children,
-}: PropsWithChildren<HeadMeta>): ReactElement<PropsWithChildren<HeadMeta>> => {
+}: PropsWithChildren): ReactElement<PropsWithChildren> => {
   const { t: tMeta } = useTranslation('meta');
+  const { title, description } = useHeadMeta('Dashboard');
   const router = useRouter();
   const openHelloListDrawer = useMemo(
     () => router.pathname.startsWith('/dashboard/hello'),
@@ -38,6 +33,9 @@ export const DashboardLayout = ({
   const [listDrawerWidth, setListDrawerWidth] = useLocalStorage<number>(
     'dashboard-layout-left-drawer-width',
     300,
+    {
+      initializeWithValue: false,
+    },
   );
   const handleListDrawerWidth = useDebounceCallback(setListDrawerWidth, 10);
   const mainLeft = useMemo(
